@@ -70,12 +70,12 @@ app.post("/createuser", (req, res) => {
 
 app.post("/isemailvalid", (req, res) => {
   console.log("Check if email is valid and exists");
-  let reqEmailId = req.body.emailId;
-  let reqPassword = req.body.password;
+  let reqPsno = req.body.psno;
+  let reqDob = req.body.dob;
   var searchMsg = 0;
   var isEmailPresent = 0;
 
-  let searchQry = `select emailid from user`;
+  let searchQry = `select psno from users`;
   mysql.query(searchQry, (err, result) => {
     if (err) {
       console.log(err, "DB Query Error");
@@ -83,18 +83,18 @@ app.post("/isemailvalid", (req, res) => {
       console.log(result);
       // If email Id is present
       for (let i = 0; i < result.length; i++) {
-        if (result[i].emailid === reqEmailId) {
+        if (result[i].psno === reqPsno) {
           isEmailPresent = 1;
           break;
         }
       }
       if (isEmailPresent) {
         console.log("Email Exists so login");
-        console.log(reqEmailId, reqPassword);
+        console.log(reqPsno, reqDob);
 
         // Query to find whether the emailId and password matches.
 
-        let emailPasswordCheckQry = `select emailid,passwords from user`;
+        let emailPasswordCheckQry = `select psno,dob from users`;
         mysql.query(emailPasswordCheckQry, (err, result) => {
           if (err) {
             console.log(err, "Db Query Error");
@@ -103,14 +103,14 @@ app.post("/isemailvalid", (req, res) => {
             //console.log(result[1].emailid,result.length);
             for (let i = 0; i < result.length; i++) {
               console.log(
-                result[i].emailid,
-                reqEmailId,
-                result[i].passwords,
-                reqPassword
+                result[i].psno,
+                reqPsno,
+                result[i].dob,
+                reqDob
               );
               if (
-                result[i].emailid === reqEmailId &&
-                result[i].passwords === reqPassword
+                result[i].psno === reqPsno &&
+                result[i].dob === reqDob
               ) {
                 console.log("matching");
                 searchMsg = 1;
@@ -120,16 +120,17 @@ app.post("/isemailvalid", (req, res) => {
             }
             if (searchMsg) {
               console.log("Matching Successful"); 
-              let idQry=`select id from user where emailid = '${reqEmailId}'`;
+              let idQry=`select psno from users where psno = '${reqPsno}'`;
               mysql.query(idQry,(err,result)=>{
                 if(err)
                 {
-                  console.log("DB query error",err);
+                  console.log("DB query error",err); 
+                  res.send({ message: "DB Query Error" })
                 } 
                 else 
                 {
-                  console.log(result[0].id); 
-                  res.send({ message: "Matching Successful", id: result[0].id });
+                  console.log(result[0].psno); 
+                  res.send({ message: "Matching Successful", psno: result[0].psno });
                 }
 
               }); 
@@ -161,7 +162,8 @@ app.post("/checkemailexists", (req, res) => {
      let searchQry = `select emailid from user`;
      mysql.query(searchQry, (err, result) => {
         if (err) {
-            console.log(err, "DB Query Error");
+            console.log(err, "DB Query Error"); 
+            res.send({ message: "DB Query Error" })
           } else {
             
             // If email Id is present
@@ -199,7 +201,8 @@ app.post("/updatepassword", (req, res) =>{
   let qry = `update user set passwords='${reqPassword}' where emailid='${reqEmailId}'`; 
   mysql.query(qry, (err,result)=>{ 
     if (err) {
-        console.log(err, "Error");
+        console.log(err, "Error"); 
+        res.send({ message: "DB Query Error" })
       } else { 
           console.log("Password Updated");
         res.send({ message: "Password Updated" });
@@ -213,10 +216,62 @@ app.post("/updatepassword", (req, res) =>{
 
 // User Dashboard Get user data
 
-app.get("/getuserdetails/:id", (req, res) => { 
+app.get("/getuserdetails/:psno", (req, res) => { 
  
-  let gId = req.params.id;
-  let qry = `select * from user where id = '${gId}'` ; 
+ 
+
+  //  Working with dates
+  //  let date_ob = new Date();
+  //  let date =("0" + date_ob.getDate()).slice(-2);
+  //  let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+  //  let year = date_ob.getFullYear();  
+  //  let hours = date_ob.getHours();
+  //  let minutes =date_ob.getMinutes();
+  //  let seconds =date_ob.getSeconds();  
+  //  var consolidatedDate = year + "-" + month + "-" + date; 
+  //  var consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+  //  console.log("date ", consolidatedDate);   
+  //  console.log("time ", consolidatedTime);
+   
+  //  console.log("date ",date,";","month ",month,";","year",year); 
+  //  console.log("Hours ",hours,";","Minutes ",minutes,";","Seconds",seconds); 
+
+  //Current date time insertion into db
+  //  let datetimeqry=`insert into checkdatetime(eventdate,eventtime) values('${consolidatedDate}', '${consolidatedTime}')`; 
+  //  mysql.query(datetimeqry,(err,result)=>
+  //  {
+  //    if(err)
+  //    {
+  //      console.log("Date time insertion error",err);
+  //    } 
+  //    else 
+  //    {
+  //     console.log("Date time inserted");
+  //    }
+  //  }); 
+   
+  // select date from db 
+   
+  // let datetimeqry =`select eventdate,eventtime from checkdatetime where id=1`; 
+  // mysql.query(datetimeqry,(err,result)=>{
+ 
+  //   if(err) 
+  //   {
+  //     console.log("DB query error", err); 
+  //   } 
+  //   else 
+  //   {
+  //     //console.log(result[0].eventdate); 
+  //     var dateString = result[0].eventdate.toString(); 
+  //     console.log("date from db",dateString); 
+  //     console.log("Time from db",result[0].eventtime)
+  //   }
+  // });
+ 
+  let gPsno = req.params.psno;
+  let qry = `select * from users where psno = '${gPsno}'` ;  
+
   mysql.query(qry, (err,result)=>{
 
     if(err)
@@ -234,6 +289,36 @@ app.get("/getuserdetails/:id", (req, res) => {
 });
 
 
+// Get event details in login page 
+
+app.get("/geteventdetails",(req,res)=>{
+
+  let qry= `select * from events`; 
+  mysql.query(qry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB query error"); 
+      res.send({ message: "DB Query Error" });
+    }
+    else 
+    {
+      console.log(result); 
+      res.send(result);
+    }
+
+  });
+
+});
+
+
+// get item detail in Item page 
+
+app.get("/getitemdetail/:eventid",(req,res)=>{  
+  
+  let paramEventid=req.params.eventid;
+  
+
+});
 
 
 
