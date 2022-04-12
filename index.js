@@ -445,6 +445,46 @@ app.get("/geteventname/:eventid",(req,res)=>{
 
 });
 
+// Submit score in items page 
+
+app.post("/submitscore",(req,res)=>{ 
+
+  let reqPsno =req.body.psno; 
+  let reqScore = req.body.score;  
+  reqScore =Number(reqScore);
+  let reqItemid = req.body.itemid;   
+  var eventid;
+  console.log(reqPsno,reqScore,reqItemid);
+
+  let qry=`select eventid from items where itemid=${reqItemid}`;
+  mysql.query(qry,(err,result)=>{
+  
+    if(err)
+    {
+      console.log("DB Query Error");
+    } 
+    else 
+    {
+      eventid=(result[0].eventid); 
+      console.log(eventid); 
+      // Insert into scores table 
+      let insertQry=`insert into scores values('${reqPsno}',${reqScore},${reqItemid},${eventid})`;  
+      mysql.query(insertQry,(err,result)=>{ 
+        if(err)
+        {
+          console.log("DB Query Error");
+        } 
+        else{
+           console.log("Data Inserted");
+        }
+
+      });
+
+    }
+  });
+
+});
+
 
 
 
