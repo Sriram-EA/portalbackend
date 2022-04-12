@@ -2,6 +2,7 @@ const express = require("express");
 const bodyparser = require("body-parser");
 const cors = require("cors");
 const mysql = require("./connection");
+const { json } = require("body-parser");
 
 const app = express();
 
@@ -289,7 +290,7 @@ app.get("/getuserdetails/:psno", (req, res) => {
 });
 
 
-// Get event details in login page 
+// Get event details in User Dashboard page 
 
 app.get("/geteventdetails",(req,res)=>{
 
@@ -308,14 +309,138 @@ app.get("/geteventdetails",(req,res)=>{
 
   });
 
+}); 
+
+// Get event flag details in User Dashboard page 
+
+app.get("/getstatusflagdetails",(req,res)=>{ 
+
+  let qry= `select eventflag from events`;   
+  var running=0; 
+  var scheduled=0; 
+  var cancelled=0;
+  mysql.query(qry,(err,result)=>{
+    if(err)
+    {
+      console.log("Db qeury error");
+    } 
+    else
+    {
+      console.log("Event Flag details", result.length);   
+      for (let i = 0; i < result.length; i++) {  
+        if(result[i].eventflag=="R")
+        {
+          running=1;
+        }  
+        if(result[i].eventflag=="S")
+        {
+          scheduled=1;
+        }  
+        if(result[i].eventflag=="C")
+        {
+          cancelled=1;
+        } 
+      } 
+      console.log("Running ", running, "Scheduled ", scheduled, "Cancelled", cancelled); 
+      var eventFlagJson ={"running": running, "scheduled":scheduled,"cancelled":cancelled}; 
+      res.send(eventFlagJson);
+    }
+  })
+
 });
 
+// Subscribe the user to subscribed event in subscribeevent table in UserDashboard.
+app.post("/subscribeusertoevent",(req,res)=>{
+ 
+  let reqPsno = req.body.psno;
+  let reqEventid = req.body.eventid; 
+  console.log(reqPsno, reqEventid);   
+  var isEventAlreadyExists = 0;
+  let selectqry=`select psno,eventid from subscribedevents`;  
+  
+  mysql.query(selectqry,(err,result)=>{ 
+    if(err)
+    { 
+      console.log("Db Query Error") 
+      res.send({ message: "DB Query Error" });
+
+    } 
+    else{
+      console.log(result.length);   
+      for (let i = 0; i < result.length; i++) {  
+        if(result[i].psno===reqPsno && result[i].eventid===reqEventid)
+        {
+            console.log("Already exists"); 
+            isEventAlreadyExists=1; 
+            break;
+        }
+      } 
+      if(isEventAlreadyExists)
+      {
+        //Cannot insert , since already subscribed 
+        console.log("Event already subscribed by this current user");
+        res.send({message: "Event Already Subscribed"});
+      } 
+      else 
+      {
+          // Insert into table 
+          let qry=`insert into subscribedevents values('${reqPsno}',${reqEventid})`; 
+          mysql.query(qry,(err,result)=>{
+            if(err)
+            {
+              console.log("Db query Error",err); 
+              res.send({ message: "DB Query Error" });
+            }  
+            else 
+            {
+              console.log("Data Inserted"); 
+              res.send({message:"Data Inserted"});
+            }
+          });
+      }
+    }
+  });
+
+});
 
 // get item detail in Item page 
 
 app.get("/getitemdetail/:eventid",(req,res)=>{  
   
   let paramEventid=req.params.eventid;
+  let qry=`select * from items where eventid=${paramEventid}`;
+  mysql.query(qry,(err,result)=>{
+    if(err)
+    {
+      console.log("Db query error",err); 
+      res.send({ message: "DB Query Error" });
+    }
+    else 
+    {
+      console.log(result); 
+      res.send(result);
+    }
+  })
+
+}); 
+
+// Get event name in items page
+
+app.get("/geteventname/:eventid",(req,res)=>{
+ 
+  let paramEventid=req.params.eventid;  
+  let qry=`select eventname from events where eventid=${paramEventid}`;
+  mysql.query(qry,(err,result)=>{  
+    if(err)
+    {
+      console.log("DB query error", err);
+    } 
+    else 
+    {
+      console.log(result); 
+      res.send(result);
+    }
+  });
   
 
 });
