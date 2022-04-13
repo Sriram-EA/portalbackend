@@ -121,6 +121,7 @@ app.post("/isemailvalid", (req, res) => {
             }
             if (searchMsg) {
               console.log("Matching Successful"); 
+
               let idQry=`select psno from users where psno = '${reqPsno}'`;
               mysql.query(idQry,(err,result)=>{
                 if(err)
@@ -222,18 +223,18 @@ app.get("/getuserdetails/:psno", (req, res) => {
  
 
   //  Working with dates
-  //  let date_ob = new Date();
-  //  let date =("0" + date_ob.getDate()).slice(-2);
-  //  let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
-  //  let year = date_ob.getFullYear();  
-  //  let hours = date_ob.getHours();
-  //  let minutes =date_ob.getMinutes();
-  //  let seconds =date_ob.getSeconds();  
-  //  var consolidatedDate = year + "-" + month + "-" + date; 
-  //  var consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+    // let date_ob = new Date();
+    // let date =("0" + date_ob.getDate()).slice(-2);
+    // let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+    // let year = date_ob.getFullYear();  
+    // let hours = date_ob.getHours();
+    // let minutes =date_ob.getMinutes();
+    // let seconds =date_ob.getSeconds();  
+    // let consolidatedDate = year + "-" + month + "-" + date; 
+    // let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
    
-  //  console.log("date ", consolidatedDate);   
-  //  console.log("time ", consolidatedTime);
+    // console.log("date ", consolidatedDate);   
+    // console.log("time ", consolidatedTime);
    
   //  console.log("date ",date,";","month ",month,";","year",year); 
   //  console.log("Hours ",hours,";","Minutes ",minutes,";","Seconds",seconds); 
@@ -287,7 +288,27 @@ app.get("/getuserdetails/:psno", (req, res) => {
     }
 
    });
-});
+}); 
+
+//Get Login time of user in User Dashboard Page 
+
+app.get("/getuserlogintime",(req,res)=>{ 
+
+    let date_ob = new Date();
+    let date =("0" + date_ob.getDate()).slice(-2);
+    let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+    let year = date_ob.getFullYear();  
+    let hours = date_ob.getHours();
+    let minutes =date_ob.getMinutes();
+    let seconds =date_ob.getSeconds();  
+    let consolidatedDate = year + "-" + month + "-" + date; 
+    let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+    console.log("date ", consolidatedDate);   
+    console.log("time ", consolidatedTime); 
+    res.send({"date":consolidatedDate,"time":consolidatedTime});
+  
+})
 
 
 // Get event details in User Dashboard page 
@@ -493,7 +514,30 @@ app.get("/getparticularitemdetail/:itemid",(req,res)=>{
   })
 })
 
+// Get Pending Items to be Scored in Items page 
 
+app.get("/getpendingitemstobescored/:psno/:eventid",(req,res)=>{
+   
+  let reqPsno =req.params.psno; 
+  let reqEventId =req.params.eventid; 
+
+  console.log("Inside Get pending Items in the backend"); 
+  console.log(reqPsno , "event id: ", reqEventId);  
+ 
+  let searchQry=`select count(*) as scoreditems from scores where psno='${reqPsno}' and eventid=${reqEventId}`; 
+  mysql.query(searchQry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB Query error", err);  
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Count of pending items to be scored", result[0]); 
+      res.send(result[0]);
+    }
+  })
+})
 
 
 
