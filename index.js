@@ -433,7 +433,8 @@ app.get("/geteventname/:eventid",(req,res)=>{
   mysql.query(qry,(err,result)=>{  
     if(err)
     {
-      console.log("DB query error", err);
+      console.log("DB query error", err); 
+      res.send({ message: "DB Query Error" });
     } 
     else 
     {
@@ -444,6 +445,57 @@ app.get("/geteventname/:eventid",(req,res)=>{
   
 
 });
+
+
+// Get if a score is given or not 
+
+app.get("/getscoredetails/:psno",(req,res)=>{
+  
+  let reqPsno=req.params.psno;
+  
+  let qry = `select * from scores where psno=${reqPsno}`; 
+  mysql.query(qry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB Query error",err);  
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Score Details",result);  
+      res.send(result); 
+
+    }
+  });
+
+});
+
+// Get particular Item Detail in score Page 
+
+app.get("/getparticularitemdetail/:itemid",(req,res)=>{
+ 
+  console.log("Inside Score page item details retrival method");
+  let reqItemid= req.params.itemid; 
+  
+  let qry=`select * from items where itemid=${reqItemid}`; 
+  mysql.query(qry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB Query error",err);  
+      res.send({ message: "DB Query Error" });
+      
+    } 
+    else 
+    {
+      console.log("Item detail", result);
+      res.send(result);
+    }
+  })
+})
+
+
+
+
 
 // Submit score in items page 
 
