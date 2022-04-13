@@ -544,7 +544,7 @@ app.post("/insertscoretodatabase",(req,res)=>{
               } 
               else{
                 console.log("Data Inserted"); 
-                res.send({ message: "Score submitted successfully" });
+                res.send({ message: "Score submitted successfully", "eventid": eventid });
               }
 
             });
