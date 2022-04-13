@@ -497,15 +497,16 @@ app.get("/getparticularitemdetail/:itemid",(req,res)=>{
 
 
 
-// Submit score in items page 
+// Submit score in the Score page 
 
-app.post("/submitscore",(req,res)=>{ 
+app.post("/insertscoretodatabase",(req,res)=>{ 
 
   let reqPsno =req.body.psno; 
   let reqScore = req.body.score;  
   reqScore =Number(reqScore);
   let reqItemid = req.body.itemid;   
-  var eventid;
+  var eventid; 
+  let eventFlag;
   console.log(reqPsno,reqScore,reqItemid);
 
   let qry=`select eventid from items where itemid=${reqItemid}`;
@@ -519,25 +520,70 @@ app.post("/submitscore",(req,res)=>{
     {
       eventid=(result[0].eventid); 
       console.log(eventid); 
-      // Insert into scores table 
-      let insertQry=`insert into scores values('${reqPsno}',${reqScore},${reqItemid},${eventid})`;  
-      mysql.query(insertQry,(err,result)=>{ 
+      // Check if the event is running  
+
+      let checkEventRunningQry=`select eventflag from events where eventid=${eventid}`; 
+      mysql.query(checkEventRunningQry,(err,result)=>{
         if(err)
         {
-          console.log("DB Query Error");
-        } 
-        else{
-           console.log("Data Inserted");
+          console.log("DB Query error",err);  
+          res.send({ message: "DB Query Error" });
         }
+        else 
+        {
+          this.eventFlag=(result[0].eventflag); 
+          if(this.eventFlag==="R")
+          { 
+            // Insert into scores table 
+            let insertQry=`insert into scores values('${reqPsno}',${reqScore},${eventid},${reqItemid})`;  
+            mysql.query(insertQry,(err,result)=>{ 
+              if(err)
+              {
+                console.log("DB Query Error"); 
+                res.send({ message: "DB Query Error" });
+              } 
+              else{
+                console.log("Data Inserted"); 
+                res.send({ message: "Score submitted successfully" });
+              }
 
-      });
-
+            });
+          } 
+          else 
+          {
+              // Send to frontend that event has closed. 
+              res.send({ message: "This event has been closed" }); 
+          }
+        }
+      })
+      
     }
   });
 
 });
 
+// Check if score already submitted in the Score page
+ 
+app.get("/checkifscorealreadysubmitted/:psno/:itemid",(req,res)=>{
+  
+  let reqPsno= req.params.psno; 
+  let reqItemid= req.params.itemid; 
+  console.log("PSno and Item id in Backend: ",reqPsno,reqItemid); 
 
+  let searchQry=`select * from scores where psno='${reqPsno}' and itemid=${reqItemid}`; 
+  mysql.query(searchQry,(err,result)=>{
+    if(err)
+    {   
+        console.log("DB Query Error", err); 
+        res.send({ message: "DB Query Error" });
+    } 
+    else{
+      console.log("Result of scores table" ,result); 
+      res.send(result);
+    }
+  })
+
+});
 
 
 
