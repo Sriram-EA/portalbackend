@@ -627,20 +627,189 @@ app.get("/checkifscorealreadysubmitted/:psno/:itemid",(req,res)=>{
     }
   })
 
+}); 
+
+
+// get particular event detail in Event detail page in Admin Dashboard 
+
+app.get("/getparticularadmineventdetail/:eventid",(req,res)=>{ 
+
+  let eventid= req.params.eventid; 
+  console.log("Event id in admindashboard: ", eventid); 
+
+  let searchQry =`select * from events where eventid= ${eventid}`; 
+  mysql.query(searchQry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Result of Particular event", result); 
+      res.send(result);
+    }
+  });
+});
+
+
+// Check event Flag details in event detail page in admin Dashboard 
+
+app.get("/getparticulareventflag/:eventid",(req,res)=>{ 
+  
+  let eventid= req.params.eventid;   
+
+  let searchQry =`select eventflag from events where eventid= ${eventid}`;
+  mysql.query(searchQry,(err,result)=>{
+
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Result in event details for event flag is :",result); 
+      res.send(result);
+    }
+  });
+
+
+});
+
+
+// Update event flag as R in events table in Event Detail Page
+
+app.get("/updatestartevent/:eventid",(req,res)=>{ 
+
+  let eventid= req.params.eventid;  
+
+  let updateQry= `update events set eventflag='R' where eventid=${eventid}`;
+
+  mysql.query(updateQry,(err,result)=>{ 
+
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Updated as R successfully");  
+      res.send({ message: "Updated as R successfully" });
+     
+    }
+
+  });
+
 });
 
 
 
+// Update event flag as S in events table in Event Detail Page 
+
+app.get("/updatescheduleevent/:eventid",(req,res)=>{  
+
+  let eventid= req.params.eventid; 
+
+  let updateQry= `update events set eventflag='S' where eventid=${eventid}`; 
+
+  mysql.query(updateQry,(err,result)=>{ 
+
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Updated as S successfully");  
+      res.send({ message: "Updated as S successfully" });
+      
+    }
+
+  });
+
+});
 
 
+// Update event flag as C in events table in Event Detail Page
+
+app.get("/updatecloseevent/:eventid",(req,res)=>{
+ 
+  let eventid= req.params.eventid; 
+
+  let updateQry= `update events set eventflag='C' where eventid=${eventid}`; 
+
+  mysql.query(updateQry,(err,result)=>{
+ 
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Updated as C successfully"); 
+      res.send({ message: "Updated as C successfully" });
+    }
+
+  });
+});
 
 
+// Calculate average result in result page for normal users 
 
+app.get("/getaverageuserresult/:itemid",(req,res)=>{
 
+  let itemid = req.params.itemid; 
+ 
+  console.log("Inside final Result method in node js: ")
+  let searchQry=`select avg(score) as userscore from scores where psno not in (select psno from panelist) and itemid=${itemid}`;
+  
+  mysql.query(searchQry,(err,result)=>{ 
 
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    { 
+      console.log(result[0]); 
+      res.send(result[0]);
+    }
 
+  });
 
+});
+ 
 
+// Calculate average result in result page for Panelist users
+
+app.get("/getaveragepanelistresult/:itemid",(req,res)=>{
+
+  let itemid = req.params.itemid; 
+ 
+  console.log("Inside final Result method in node js: ")
+  let searchQry=`select avg(score) as panelistscore from scores where psno in (select psno from panelist) and itemid=${itemid}`;
+  
+  mysql.query(searchQry,(err,result)=>{ 
+
+    if(err)
+    { 
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    { 
+      console.log(result[0]); 
+      res.send(result[0]);
+    }
+
+  });
+
+});
 
 
 
