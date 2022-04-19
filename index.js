@@ -3,6 +3,7 @@ const bodyparser = require("body-parser");
 const cors = require("cors");
 const mysql = require("./connection");
 const { json } = require("body-parser");
+const e = require("express");
 
 const app = express();
 
@@ -72,9 +73,11 @@ app.post("/createuser", (req, res) => {
 app.post("/isemailvalid", (req, res) => {
   console.log("Check if email is valid and exists");
   let reqPsno = req.body.psno;
-  let reqDob = req.body.dob;
+  let reqDob = req.body.dob; 
+  let reqIsAdmin = req.body.dropdown
   var searchMsg = 0;
-  var isEmailPresent = 0;
+  var isEmailPresent = 0; 
+  console.log(reqIsAdmin);
 
   let searchQry = `select psno from users`;
   mysql.query(searchQry, (err, result) => {
@@ -120,26 +123,57 @@ app.post("/isemailvalid", (req, res) => {
               }
             }
             if (searchMsg) {
-              console.log("Matching Successful"); 
+              // If Normal User
+              if(reqIsAdmin==="participant")
+              {
+                console.log("Matching Successful for Participant"); 
 
-              let idQry=`select psno from users where psno = '${reqPsno}'`;
-              mysql.query(idQry,(err,result)=>{
-                if(err)
-                {
-                  console.log("DB query error",err); 
-                  res.send({ message: "DB Query Error" })
-                } 
-                else 
-                {
-                  console.log(result[0].psno); 
-                  res.send({ message: "Matching Successful", psno: result[0].psno });
-                }
+                let idQry=`select psno from users where psno = '${reqPsno}'`;
+                mysql.query(idQry,(err,result)=>{
+                  if(err)
+                  {
+                    console.log("DB query error",err); 
+                    res.send({ message: "DB Query Error" })
+                  } 
+                  else 
+                  {
+                    console.log(result[0].psno); 
+                    res.send({ message: "Matching Successful participant", psno: result[0].psno });
+                  }
 
-              }); 
+                }); 
+              } 
+              else if(reqIsAdmin==="admin")
+              {
+                console.log("Matching Successful for Admin");   
+                let idQry=`select count(*) as isadmin from admintable where psno='${reqPsno}'`;
+                mysql.query(idQry,(err,result)=>{
+                  if(err)
+                  {
+                    console.log("DB query error",err); 
+                    res.send({ message: "DB Query Error" })
+                  } 
+                  else 
+                  {
+                    console.log(result[0].isadmin);  
+                    if(result[0].isadmin == 0)
+                    {
+                      res.send({ message: "You are not an admin", psno: reqPsno });
+                    } 
+                    else 
+                    {
+                      res.send({ message: "Matching Successful admin", psno: reqPsno });
+                    }
+                    
+                  }
+
+                }); 
+
+              }
               
-            } else {
-              console.log("Incorrect Password");
-              res.send({ message: "Incorrect Password" });
+              } else {
+                console.log("Incorrect Password");
+                res.send({ message: "Incorrect Password" });
             }
           }
         });
@@ -150,6 +184,37 @@ app.post("/isemailvalid", (req, res) => {
       }
     }
   });
+});
+
+// Login Admin in admin Login Page 
+app.post("/adminlogin",(req,res)=>{ 
+
+  let reqPsno = req.body.psno;
+  let reqPassword = req.body.password; 
+
+  console.log("Inside adminlogin", reqPsno, reqPassword);
+  let searchQry=`select * from admintable where psno='${reqPsno}'`; 
+  mysql.query(searchQry,(err,result)=>{ 
+    if(err)
+    {
+      console.log(err, "DB Query Error"); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      if(reqPassword===result[0].passwords)
+      {
+        res.send({ message: "Matching Successful admin", psno: reqPsno });
+      } 
+      else 
+      {
+        res.send({ message: "Incorrect Password", psno: reqPsno });
+      }
+      
+    }
+
+  });
+
 });
 
 
