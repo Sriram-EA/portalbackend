@@ -820,6 +820,37 @@ app.get("/updatecloseevent/:eventid",(req,res)=>{
     }
 
   });
+}); 
+
+// Update date and time in Events table 
+
+app.post("/updatedateandtime/:eventid",(req,res)=>{
+  
+  let reqEventId=req.params.eventid; 
+  let reqDate=req.body.eventdate; 
+  let reqStartTime=req.body.starttime; 
+  let reqEndTime=req.body.endtime; 
+
+  console.log("Inside update and time method", reqEventId,reqDate,reqStartTime,reqEndTime);  
+
+  let updQry=`update events set eventdate='${reqDate}', starttime='${reqStartTime}', endtime='${reqEndTime}' where eventid=${reqEventId}`;  
+
+  mysql.query(updQry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB Query Error", err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    { 
+      console.log("Updated Date and Time successfully"); 
+      res.send({ message: "Updated Date and Time successfully" });
+    }
+
+  });
+  
+  
+
 });
 
 
