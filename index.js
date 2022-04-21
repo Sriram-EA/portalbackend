@@ -103,8 +103,7 @@ app.post("/isemailvalid", (req, res) => {
           if (err) {
             console.log(err, "Db Query Error");
           } else {
-            //console.log(result[0].emailId,result[0].password);
-            //console.log(result[1].emailid,result.length);
+
             for (let i = 0; i < result.length; i++) {
               console.log(
                 result[i].psno,
@@ -126,9 +125,23 @@ app.post("/isemailvalid", (req, res) => {
               // If Normal User
               if(reqIsAdmin==="participant")
               {
-                console.log("Matching Successful for Participant"); 
+                console.log("Matching Successful for Participant");  
+                // Update date and time
 
-                let idQry=`select psno from users where psno = '${reqPsno}'`;
+                let date_ob = new Date();
+                let date =("0" + date_ob.getDate()).slice(-2);
+                let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+                let year = date_ob.getFullYear();  
+                let hours = date_ob.getHours();
+                let minutes =date_ob.getMinutes();
+                let seconds =date_ob.getSeconds();  
+                let consolidatedDate = year + "-" + month + "-" + date; 
+                let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+                console.log("date ", consolidatedDate);   
+                console.log("time ", consolidatedTime); 
+       
+                let idQry=`update users set logindate='${consolidatedDate}',logintime='${consolidatedTime}',loginflag='Active' where psno = '${reqPsno}'`;
                 mysql.query(idQry,(err,result)=>{
                   if(err)
                   {
@@ -137,8 +150,7 @@ app.post("/isemailvalid", (req, res) => {
                   } 
                   else 
                   {
-                    console.log(result[0].psno); 
-                    res.send({ message: "Matching Successful participant", psno: result[0].psno });
+                    res.send({ message: "Matching Successful participant", psno: reqPsno });
                   }
 
                 }); 
@@ -161,14 +173,38 @@ app.post("/isemailvalid", (req, res) => {
                       res.send({ message: "You are not an admin", psno: reqPsno });
                     } 
                     else 
-                    {
-                      res.send({ message: "Matching Successful admin", psno: reqPsno });
-                    }
-                    
+                    {  
+                      // update date and time 
+
+                      let date_ob = new Date();
+                      let date =("0" + date_ob.getDate()).slice(-2);
+                      let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+                      let year = date_ob.getFullYear();  
+                      let hours = date_ob.getHours();
+                      let minutes =date_ob.getMinutes();
+                      let seconds =date_ob.getSeconds();  
+                      let consolidatedDate = year + "-" + month + "-" + date; 
+                      let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+                      console.log("date ", consolidatedDate);   
+                      console.log("time ", consolidatedTime);
+
+              
+                      let updateQry=`update users set logindate='${consolidatedDate}',logintime='${consolidatedTime}',loginflag='Active' where psno = '${reqPsno}'`;
+                      mysql.query(updateQry,(err,result)=>{ 
+                        if(err)
+                        {
+                          console.log("DB query error",err); 
+                          res.send({ message: "DB Query Error" });
+                        } 
+                        else 
+                        {
+                          res.send({ message: "Matching Successful admin", psno: reqPsno });
+                        }
+                      });
+                    }                   
                   }
-
                 }); 
-
               }
               
               } else {
@@ -286,56 +322,6 @@ app.post("/updatepassword", (req, res) =>{
 app.get("/getuserdetails/:psno", (req, res) => { 
  
  
-
-  //  Working with dates
-    // let date_ob = new Date();
-    // let date =("0" + date_ob.getDate()).slice(-2);
-    // let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
-    // let year = date_ob.getFullYear();  
-    // let hours = date_ob.getHours();
-    // let minutes =date_ob.getMinutes();
-    // let seconds =date_ob.getSeconds();  
-    // let consolidatedDate = year + "-" + month + "-" + date; 
-    // let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
-   
-    // console.log("date ", consolidatedDate);   
-    // console.log("time ", consolidatedTime);
-   
-  //  console.log("date ",date,";","month ",month,";","year",year); 
-  //  console.log("Hours ",hours,";","Minutes ",minutes,";","Seconds",seconds); 
-
-  //Current date time insertion into db
-  //  let datetimeqry=`insert into checkdatetime(eventdate,eventtime) values('${consolidatedDate}', '${consolidatedTime}')`; 
-  //  mysql.query(datetimeqry,(err,result)=>
-  //  {
-  //    if(err)
-  //    {
-  //      console.log("Date time insertion error",err);
-  //    } 
-  //    else 
-  //    {
-  //     console.log("Date time inserted");
-  //    }
-  //  }); 
-   
-  // select date from db 
-   
-  // let datetimeqry =`select eventdate,eventtime from checkdatetime where id=1`; 
-  // mysql.query(datetimeqry,(err,result)=>{
- 
-  //   if(err) 
-  //   {
-  //     console.log("DB query error", err); 
-  //   } 
-  //   else 
-  //   {
-  //     //console.log(result[0].eventdate); 
-  //     var dateString = result[0].eventdate.toString(); 
-  //     console.log("date from db",dateString); 
-  //     console.log("Time from db",result[0].eventtime)
-  //   }
-  // });
- 
   let gPsno = req.params.psno;
   let qry = `select * from users where psno = '${gPsno}'` ;  
 
@@ -357,23 +343,23 @@ app.get("/getuserdetails/:psno", (req, res) => {
 
 //Get Login time of user in User Dashboard Page 
 
-app.get("/getuserlogintime",(req,res)=>{ 
+app.get("/getuserlogintime/:psno",(req,res)=>{ 
 
-    let date_ob = new Date();
-    let date =("0" + date_ob.getDate()).slice(-2);
-    let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
-    let year = date_ob.getFullYear();  
-    let hours = date_ob.getHours();
-    let minutes =date_ob.getMinutes();
-    let seconds =date_ob.getSeconds();  
-    let consolidatedDate = year + "-" + month + "-" + date; 
-    let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
-   
-    console.log("date ", consolidatedDate);   
-    console.log("time ", consolidatedTime); 
-    res.send({"date":consolidatedDate,"time":consolidatedTime});
+    let reqPsno = req.params.psno;
+    let selectTimeQry=`select logindate,logintime,loginflag from users where psno='${reqPsno}'`;  
+    mysql.query(selectTimeQry,(err,result)=>{
+      if(err)
+      {
+
+      } 
+      else 
+      {
+        console.log("Result in login time", result[0].logindate); 
+        res.send({date: result[0].logindate, time: result[0].logintime, loginflag : result[0].loginflag});
+      }
+    });
   
-})
+});
 
 
 // Get event details in User Dashboard page 
@@ -623,7 +609,7 @@ app.post("/insertscoretodatabase",(req,res)=>{
   
     if(err)
     {
-      console.log("DB Query Error");
+      console.log("DB Query Error",err);
     } 
     else 
     {
@@ -643,12 +629,26 @@ app.post("/insertscoretodatabase",(req,res)=>{
           this.eventFlag=(result[0].eventflag); 
           if(this.eventFlag==="R")
           { 
-            // Insert into scores table 
-            let insertQry=`insert into scores values('${reqPsno}',${reqScore},${eventid},${reqItemid})`;  
+            // Insert into scores table  
+            // Calculate score date and time  
+            let date_ob = new Date();
+            let date =("0" + date_ob.getDate()).slice(-2);
+            let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+            let year = date_ob.getFullYear();  
+            let hours = date_ob.getHours();
+            let minutes =date_ob.getMinutes();
+            let seconds =date_ob.getSeconds();  
+            let consolidatedDate = year + "-" + month + "-" + date; 
+            let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+            console.log("date ", consolidatedDate);   
+            console.log("time ", consolidatedTime); 
+
+            let insertQry=`insert into scores values('${reqPsno}',${reqScore},${eventid},${reqItemid},'${consolidatedDate}','${consolidatedTime}')`;  
             mysql.query(insertQry,(err,result)=>{ 
               if(err)
               {
-                console.log("DB Query Error"); 
+                console.log("DB Query Error",err); 
                 res.send({ message: "DB Query Error" });
               } 
               else{
@@ -856,12 +856,13 @@ app.post("/updatedateandtime/:eventid",(req,res)=>{
 
 // Calculate average result in result page for normal users 
 
-app.get("/getaverageuserresult/:itemid",(req,res)=>{
+app.get("/getaverageuserresult/:itemid/:eventid",(req,res)=>{
 
-  let itemid = req.params.itemid; 
+  let itemid = req.params.itemid;  
+  let reqEventId = req.params.eventid;
  
-  console.log("Inside final Result method in node js: ")
-  let searchQry=`select avg(score) as userscore from scores where psno not in (select psno from panelist) and itemid=${itemid}`;
+  console.log("Inside User Result method in node js: ")
+  let searchQry=`select avg(score) as userscore from scores where psno not in (select psno from panelist where eventid=${reqEventId}) and itemid=${itemid}`;
   
   mysql.query(searchQry,(err,result)=>{ 
 
@@ -883,12 +884,13 @@ app.get("/getaverageuserresult/:itemid",(req,res)=>{
 
 // Calculate average result in result page for Panelist users
 
-app.get("/getaveragepanelistresult/:itemid",(req,res)=>{
+app.get("/getaveragepanelistresult/:itemid/:eventid",(req,res)=>{
 
-  let itemid = req.params.itemid; 
+  let itemid = req.params.itemid;  
+  let reqEventid = req.params.eventid;
  
-  console.log("Inside final Result method in node js: ")
-  let searchQry=`select avg(score) as panelistscore from scores where psno in (select psno from panelist) and itemid=${itemid}`;
+  console.log("Inside final Result method in node js: " , "Item id", itemid, "Event id", reqEventid);
+  let searchQry=`select avg(score) as panelistscore from scores where psno in (select psno from panelist where eventid=${reqEventid}) and itemid=${itemid}`;
   
   mysql.query(searchQry,(err,result)=>{ 
 
@@ -904,6 +906,66 @@ app.get("/getaveragepanelistresult/:itemid",(req,res)=>{
     }
 
   });
+
+});
+
+// logout user
+
+app.get("/logoutuser/:psno",(req,res)=>{ 
+
+  let reqPsno = req.params.psno; 
+  console.log("Log out in Backend", reqPsno);  
+
+  let date_ob = new Date();
+  let date =("0" + date_ob.getDate()).slice(-2);
+  let month =("0" + (date_ob.getMonth() + 1)).slice(-2);
+  let year = date_ob.getFullYear();  
+  let hours = date_ob.getHours();
+  let minutes =date_ob.getMinutes();
+  let seconds =date_ob.getSeconds();  
+  let consolidatedDate = year + "-" + month + "-" + date; 
+  let consolidatedTime = hours + ":" + minutes + ":" + seconds; 
+   
+  console.log("date ", consolidatedDate);   
+  console.log("time ", consolidatedTime);   
+
+  let updateQry=`update users set logoutdate='${consolidatedDate}',logouttime='${consolidatedTime}',loginflag='Inactive' where psno = '${reqPsno}'`;
+  mysql.query(updateQry,(err,result)=>{ 
+    if(err)
+    {
+      console.log("DB query error",err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      res.send({ message: "Logged Out Successfully"});
+    }
+  });
+});
+
+
+// Authenticating if the user is valid 
+
+app.get("/isauthvalid/:psno",(req,res)=>{ 
+
+  let reqPsno= req.params.psno;  
+
+  let srchQry=`select loginflag from users where psno='${reqPsno}'`; 
+
+  mysql.query(srchQry,(err,result)=>{
+    if(err)
+    {
+      console.log("DB query error",err); 
+      res.send({ message: "DB Query Error" });
+    } 
+    else 
+    {
+      console.log("Result in Auth Guard backend is", result[0].loginflag); 
+      res.send({ message: result[0].loginflag });
+    }
+
+  });
+
 
 });
 
